@@ -1,0 +1,33 @@
+{
+	"name": "Execute Activity",
+	"properties": {
+		"activities": [
+			{
+				"name": "Execute generic copy pipelines",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "generic copy pipeline",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ppl_container": "landing",
+						"ppl_folder": "2026/05/07",
+						"ppl_file": "people-100.csv",
+						"ppl_dbo": "dbo",
+						"ppl_table": "people"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-05-07T02:19:46Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

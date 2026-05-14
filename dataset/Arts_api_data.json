@@ -1,0 +1,13 @@
+{
+	"name": "Arts_api_data",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "RestAPI_LS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

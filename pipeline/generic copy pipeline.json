@@ -1,0 +1,105 @@
+{
+	"name": "generic copy pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy generic",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Generic_Lakefiles",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": {
+								"value": "@pipeline().parameters.ppl_container",
+								"type": "Expression"
+							},
+							"folder": {
+								"value": "@pipeline().parameters.ppl_folder",
+								"type": "Expression"
+							},
+							"file": {
+								"value": "@pipeline().parameters.ppl_file",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": {
+								"value": "@pipeline().parameters.ppl_dbo",
+								"type": "Expression"
+							},
+							"table": {
+								"value": "@pipeline().parameters.ppl_table",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"ppl_container": {
+				"type": "string"
+			},
+			"ppl_folder": {
+				"type": "string"
+			},
+			"ppl_file": {
+				"type": "string"
+			},
+			"ppl_dbo": {
+				"type": "string"
+			},
+			"ppl_table": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-05-06T02:43:07Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

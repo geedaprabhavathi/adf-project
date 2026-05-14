@@ -1,0 +1,15 @@
+{
+	"name": "detrainingadf2026",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "southindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f9907813-53a1-488d-a178-3a159d44bca8",
+		"tenantId": "ddb4c9af-4b10-4565-8460-7c5af21fd9cf"
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "RestAPI_LS",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://api.artic.edu/api/v1/artworks",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		},
+		"connectVia": {
+			"referenceName": "AzureintegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

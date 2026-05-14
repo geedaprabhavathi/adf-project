@@ -1,0 +1,152 @@
+{
+	"name": "until file arrives",
+	"properties": {
+		"activities": [
+			{
+				"name": "Until file exists",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Check test file exists').output.exists, true)",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Check test file exists",
+							"type": "GetMetadata",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "Generic_Lakefiles",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": "landing",
+										"folder": "2026/05/09",
+										"file": "testfile.txt"
+									}
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			},
+			{
+				"name": "Copy data1",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Until file exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".txt"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Generic_Lakefiles",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "landing",
+							"folder": "2026/09/09",
+							"file": "testfile.txt"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Generic_Lakefiles",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "processed",
+							"folder": "2026/09",
+							"file": "testfile.txt"
+						}
+					}
+				]
+			},
+			{
+				"name": "Fail Copy",
+				"type": "Fail",
+				"dependsOn": [
+					{
+						"activity": "Copy data1",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"message": "Traget folder is not existing",
+					"errorCode": "100"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-05-09T06:23:33Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

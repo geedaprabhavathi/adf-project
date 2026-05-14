@@ -1,0 +1,142 @@
+{
+	"name": "Getmetadata if condition",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Metadata on File",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "Generic_Lakefiles",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "landing",
+							"folder": {
+								"value": "@concat(formatDateTime(utcNow(),'yyyy'),'/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'))",
+								"type": "Expression"
+							},
+							"file": "organizations-100000.csv"
+						}
+					},
+					"fieldList": [
+						"exists",
+						"columnCount",
+						"itemName",
+						"itemType",
+						"lastModified",
+						"size",
+						"structure",
+						"contentMD5"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata on File",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Get Metadata on File').output.exists,true)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Copy  org data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": "truncate table dbo.organizations",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Generic_Lakefiles",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": "landing",
+										"folder": {
+											"value": "@concat(formatDateTime(utcNow(),'yyyy'), '/',formatDateTime(utcNow(),'MM'),'/',formatDateTime(utcNow(),'dd'))",
+											"type": "Expression"
+										},
+										"file": "organizations-100000.csv"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Generic_SQLTbl",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": "dbo",
+										"table": "organizations"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-05-06T03:16:53Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

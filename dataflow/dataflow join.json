@@ -1,0 +1,86 @@
+{
+	"name": "dataflow join",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "customers",
+						"type": "DatasetReference"
+					},
+					"name": "customers"
+				},
+				{
+					"dataset": {
+						"referenceName": "orders",
+						"type": "DatasetReference"
+					},
+					"name": "orders"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "join",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "joinordersandcustomers"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          customer_id as string,",
+				"          name as string,",
+				"          email as string,",
+				"          gender as string,",
+				"          signup_date as string,",
+				"          country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> customers",
+				"source(output(",
+				"          order_id as string,",
+				"          customer_id as string,",
+				"          order_date as string,",
+				"          total_amount as string,",
+				"          payment_method as string,",
+				"          shipping_country as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> orders",
+				"customers, orders join(customers@customer_id == orders@customer_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinordersandcustomers",
+				"joinordersandcustomers sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Index as string,",
+				"          {Organization Id} as string,",
+				"          Name as string,",
+				"          Website as string,",
+				"          Country as string,",
+				"          Description as string,",
+				"          Founded as string,",
+				"          Industry as string,",
+				"          {Number of employees} as string,",
+				"          table_nm as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}

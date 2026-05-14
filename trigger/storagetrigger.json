@@ -1,0 +1,38 @@
+{
+	"name": "storagetrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "generic copy pipeline",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"ppl_container": "landing",
+					"ppl_folder": "2026/05/11",
+					"ppl_file": "sales_1.csv",
+					"ppl_dbo": "dbo",
+					"ppl_table": "sales1"
+				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "copy API Data",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/landing/blobs/2026/05/11",
+			"blobPathEndsWith": ".csv",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/45a9a29a-87a8-4178-b7ad-664454654fc1/resourceGroups/de_training/providers/Microsoft.Storage/storageAccounts/detrainingdatalake",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}

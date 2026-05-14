@@ -1,0 +1,181 @@
+{
+	"name": "dataflow transform",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "orders1",
+						"type": "DatasetReference"
+					},
+					"name": "orders"
+				},
+				{
+					"dataset": {
+						"referenceName": "customers1",
+						"type": "DatasetReference"
+					},
+					"name": "customers1"
+				},
+				{
+					"dataset": {
+						"referenceName": "orderitems",
+						"type": "DatasetReference"
+					},
+					"name": "orderitems"
+				},
+				{
+					"dataset": {
+						"referenceName": "products1",
+						"type": "DatasetReference"
+					},
+					"name": "products1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dataflow_result",
+						"type": "DatasetReference"
+					},
+					"name": "SQLDBTBL"
+				}
+			],
+			"transformations": [
+				{
+					"name": "orderscustomers"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "filterstatus"
+				},
+				{
+					"name": "joinproductsorders"
+				},
+				{
+					"name": "joinorderscustomersproducts"
+				},
+				{
+					"name": "selectresult"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          order_id as string,",
+				"          customer_id as string,",
+				"          order_date as date,",
+				"          shipping_city as string,",
+				"          order_status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     ignoreNoFilesFound: false) ~> orders",
+				"source(output(",
+				"          customer_id as string,",
+				"          customer_name as string,",
+				"          email as string,",
+				"          city as string,",
+				"          state as string,",
+				"          signup_date as string,",
+				"          status as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> customers1",
+				"source(output(",
+				"          order_item_id as string,",
+				"          order_id as string,",
+				"          product_id as string,",
+				"          quantity as string,",
+				"          unit_price as string,",
+				"          total_amount as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> orderitems",
+				"source(output(",
+				"          product_id as string,",
+				"          product_name as string,",
+				"          category as string,",
+				"          price as string,",
+				"          stock_quantity as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> products1",
+				"orders, customers1 join(orders@customer_id == customers1@customer_id,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> orderscustomers",
+				"orderscustomers select(mapColumn(",
+				"          order_id,",
+				"          order_date,",
+				"          shipping_city,",
+				"          order_status,",
+				"          customer_id = customers1@customer_id,",
+				"          customer_name,",
+				"          email,",
+				"          city,",
+				"          state,",
+				"          signup_date,",
+				"          status",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> select1",
+				"select1 filter(status == 'Active' && order_status != 'Cancelled') ~> filterstatus",
+				"orderitems, products1 join(orderitems@product_id == products1@product_id,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinproductsorders",
+				"filterstatus, joinproductsorders join(select1@order_id == orderitems@order_id,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinorderscustomersproducts",
+				"joinorderscustomersproducts select(mapColumn(",
+				"          order_id = select1@order_id,",
+				"          order_date,",
+				"          shipping_city,",
+				"          order_status,",
+				"          customer_id,",
+				"          customer_name,",
+				"          email,",
+				"          city,",
+				"          state,",
+				"          signup_date,",
+				"          status,",
+				"          order_item_id,",
+				"          order_id = orderitems@order_id,",
+				"          product_id = orderitems@product_id,",
+				"          quantity,",
+				"          unit_price,",
+				"          total_amount,",
+				"          product_id = products1@product_id,",
+				"          product_name,",
+				"          category,",
+				"          price,",
+				"          stock_quantity",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectresult",
+				"selectresult sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SQLDBTBL"
+			]
+		}
+	}
+}

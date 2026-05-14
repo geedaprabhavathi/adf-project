@@ -1,0 +1,183 @@
+{
+	"name": "get metadata lookup",
+	"properties": {
+		"activities": [
+			{
+				"name": "Lookup products count",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata of table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select count(*) as no_of_rows from dbo.products",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "dbo",
+							"table": "products"
+						}
+					}
+				}
+			},
+			{
+				"name": "Get Metadata of table",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "dbo",
+							"table": "products"
+						}
+					},
+					"fieldList": [
+						"exists"
+					]
+				}
+			},
+			{
+				"name": "If Condition1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Lookup products count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(activity('Lookup products count').output.firstRow.no_of_rows,11000)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Execute Pipeline1",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"policy": {
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Execute Activity",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Copy customers",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "load_ts",
+											"value": {
+												"value": "@utcNow()",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate",
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Generic_Lakefiles",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": "landing",
+										"folder": "2026/05/07",
+										"file": "customers-100 (1).csv"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Generic_SQLTbl",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": "dbo",
+										"table": "customers_latest"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-05-07T02:29:08Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

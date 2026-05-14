@@ -1,0 +1,60 @@
+{
+	"name": "dataflow flatten json",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "testJson2",
+						"type": "DatasetReference"
+					},
+					"name": "testjson"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "json_tbl",
+						"type": "DatasetReference"
+					},
+					"name": "jsontbl"
+				}
+			],
+			"transformations": [
+				{
+					"name": "flattenjson"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          data as (id as integer, name as string, cities as (city as string)[])[]",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     limit: 100,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'singleDocument') ~> testjson",
+				"testjson foldDown(unroll(data.cities),",
+				"     mapColumn(",
+				"          id = data.id,",
+				"          name = data.name,",
+				"          city = data.cities.city",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> flattenjson",
+				"flattenjson sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     recreate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> jsontbl"
+			]
+		}
+	}
+}

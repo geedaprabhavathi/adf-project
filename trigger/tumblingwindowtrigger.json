@@ -1,0 +1,27 @@
+{
+	"name": "tumblingwindowtrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipeline": {
+			"pipelineReference": {
+				"referenceName": "copy from ADLs to Blob",
+				"type": "PipelineReference"
+			}
+		},
+		"type": "TumblingWindowTrigger",
+		"typeProperties": {
+			"frequency": "Minute",
+			"interval": 5,
+			"startTime": "2026-05-11T08:00:00Z",
+			"endTime": "2026-05-12T08:30:00Z",
+			"delay": "00:00:00",
+			"maxConcurrency": 5,
+			"retryPolicy": {
+				"count": 1,
+				"intervalInSeconds": 300
+			},
+			"dependsOn": []
+		}
+	}
+}

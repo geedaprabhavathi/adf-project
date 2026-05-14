@@ -1,0 +1,205 @@
+{
+	"name": "Incremental Load using water mark",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy orders stg",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"preCopyScript": "truncate table dbo.orders_stg;",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false,
+						"tableOption": "autoCreate",
+						"disableMetricsCollection": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Generic_Lakefiles",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "landing",
+							"folder": "2026/05/12",
+							"file": "order3.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "dbo",
+							"table": "orders_stg"
+						}
+					}
+				]
+			},
+			{
+				"name": "Copy orders",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set max order id",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('select * from dbo.orders_stg where order_id>', activity('Lookup max order id').output.firstRow.max_order_id)",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "AzureSqlSink",
+						"writeBehavior": "insert",
+						"sqlWriterUseTableLock": false
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "dbo",
+							"table": "order_stg"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "dbo",
+							"table": "orders"
+						}
+					}
+				]
+			},
+			{
+				"name": "Lookup max order id",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Copy orders stg",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select coalesce(max(cast(order_id as int)),0) as max_order_id from dbo.orders;",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "Generic_SQLTbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schema": "dbo",
+							"table": "orders"
+						}
+					}
+				}
+			},
+			{
+				"name": "Set max order id",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Lookup max order id",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "id",
+					"value": {
+						"value": "@activity('Lookup max order id').output.firstRow.max_order_id",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"id": {
+				"type": "Integer",
+				"defaultValue": 0
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-05-12T03:07:18Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

@@ -1,0 +1,34 @@
+{
+	"name": "dependenttumbwindtrigger",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipeline": {
+			"pipelineReference": {
+				"referenceName": "pipeline1",
+				"type": "PipelineReference"
+			}
+		},
+		"type": "TumblingWindowTrigger",
+		"typeProperties": {
+			"frequency": "Minute",
+			"interval": 5,
+			"startTime": "2026-05-12T07:30:00Z",
+			"delay": "00:00:00",
+			"maxConcurrency": 5,
+			"retryPolicy": {
+				"count": 1,
+				"intervalInSeconds": 30
+			},
+			"dependsOn": [
+				{
+					"type": "TumblingWindowTriggerDependencyReference",
+					"referenceTrigger": {
+						"referenceName": "tumblingwindowtrigger",
+						"type": "TriggerReference"
+					}
+				}
+			]
+		}
+	}
+}

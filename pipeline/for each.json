@@ -1,0 +1,105 @@
+{
+	"name": "for each",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach table",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@createArray('products', 'organizations','people','sales_tbl')",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"batchCount": 2,
+					"activities": [
+						{
+							"name": "Copy foreach",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"additionalColumns": [
+										{
+											"name": "table_nm",
+											"value": {
+												"value": "@item()",
+												"type": "Expression"
+											}
+										}
+									],
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "Generic_SQLTbl",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema": "dbo",
+										"table": {
+											"value": "@item()",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "Generic_Lakefiles",
+									"type": "DatasetReference",
+									"parameters": {
+										"container": "processed",
+										"folder": {
+											"value": "@concat(formatDateTime(utcNow(), 'yyyy'), '/',formatDateTime(utcNow(), 'MM'), '/',formatDateTime(utcNow(), 'dd'))",
+											"type": "Expression"
+										},
+										"file": {
+											"value": "@concat(item(), '.csv')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-05-07T02:59:12Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

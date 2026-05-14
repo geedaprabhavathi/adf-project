@@ -1,0 +1,50 @@
+{
+	"name": "testjson",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ADLS_LS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "test.json",
+				"folderPath": "2026/05/09",
+				"fileSystem": "landing"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "integer"
+							},
+							"name": {
+								"type": "string"
+							},
+							"cities": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"city": {
+											"type": "string"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
