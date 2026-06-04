@@ -1,0 +1,15 @@
+{
+	"name": "adfdeazure2026",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "australiaeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "78a03104-502b-47b8-bd0a-d964f0a81b7d",
+		"tenantId": "ddb4c9af-4b10-4565-8460-7c5af21fd9cf"
+	}
+}
